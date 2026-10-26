@@ -379,19 +379,21 @@ img{max-width:100%}
 
   <section id="v-meet" hidden style="display:flex;flex-direction:column;gap:16px">
     <div><span class="eyebrow">For the host</span><h3 style="font-size:22px">Spin the wheel</h3>
-      <p class="note">Spin to pick a topic for the meeting. Each topic comes up once before any repeat. To pick your own topics, tap <a href="#topicPanel" id="openTopics">Choose topics</a> below to open it up and tick the ones you want.</p></div>
+      <p class="note">Spin to pick a topic for the meeting. Each topic comes up once before any repeat. To pick your own topics, tap <a href="#topicPanel" data-open-topics>Choose topics</a> below to open it up and tick the ones you want.</p></div>
     <div class="wheel-wrap">
       <div class="wheel-box"><canvas id="wheel" width="340" height="340" aria-label="Topic wheel"></canvas><div class="wheel-pointer" aria-hidden="true"></div></div>
       <button class="btn gold big" id="spinBtn">Spin the wheel</button>
     </div>
-    <article class="reading" id="wheelOut"><p class="note">Tap Spin the wheel to choose a topic.</p></article>
+    <article class="reading" id="wheelOut"><p class="note">Tap Spin the wheel to choose a topic, or <a href="#topicPanel" data-open-topics>change and add topics</a> first.</p></article>
+    <div class="card-head"><h3>Topics this session</h3><button class="btn ghost" id="clearTopics" type="button" style="font-size:14px;padding:6px 12px">Clear</button></div>
+    <ol class="hist" id="topicHist"></ol>
     <div><h3>Share timer</h3><p class="note">Sounds and the 30-second warning are set on the <a href="#" data-to-timer>Timer tab</a>.</p></div>
     <div class="timer" id="spinTimer"></div>
     <details class="panel" id="topicPanel"><summary>Choose topics <span id="topicCount"></span></summary>
       <div class="panel-body">
-        <p class="note">Tick the topics you want on the wheel. Between 6 and 16 works best. Your choices are saved on this device.</p>
+        <p class="note">Tick the topics you want on the wheel. Between 6 and 18 works best. Your choices are saved on this device.</p>
         <div class="topic-list" id="topicList"></div>
-        <form id="topicForm" class="topic-add"><label class="f" style="flex:1 1 200px">Add your own topic<input id="topicNew" maxlength="28" placeholder="e.g. Living sober"></label><button class="btn ghost" type="submit">Add</button></form>
+        <form id="topicForm" class="topic-add"><label class="f" style="flex:1 1 200px">Add your own topic<input id="topicNew" maxlength="28" placeholder="e.g. Staying sober on holiday"></label><button class="btn ghost" type="submit">Add</button></form>
         <button class="btn ghost" id="topicReset" type="button">Reset to the standard topics</button>
       </div>
     </details>
@@ -1424,11 +1426,14 @@ function homeVis(){const onToday=$("tab-today").getAttribute("aria-selected")===
 addEventListener("scroll",homeVis,{passive:true});document.querySelector("nav").addEventListener("click",()=>setTimeout(homeVis,0));homeVis();
 renderMine();draw();renderToday();
 // Meeting tab: topic wheel and share timer
-const WTOP=[["Acceptance","p. 417 (personal stories)"],["Gratitude",""],["Resentment","pp. 64–67"],["Fear","pp. 67–68"],["Family","The Family Afterward, pp. 122–135"],["Honesty","p. 58"],["Amends","pp. 76–84"],["Service","Working With Others, pp. 89–103"],["My Higher Power","We Agnostics, pp. 44–57"],["Prayer and meditation","pp. 86–88"],["One day at a time","p. 85"],["Forgiveness","pp. 66–67"],["Humility","p. 76"],["Hope","There Is a Solution, pp. 17–29"],["Patience","p. 83"],["Fun in sobriety","p. 132"],
+const WTOP=[["Acceptance","p. 417 (personal stories)"],["Gratitude",""],["Resentment","pp. 64–67"],["Fear","pp. 67–68"],["Family","The Family Afterward, pp. 122–135"],["Honesty","p. 58"],["Amends","pp. 76–84"],["Service","Working With Others, pp. 89–103"],["My Higher Power","We Agnostics, pp. 44–57"],["Prayer and meditation","pp. 86–88"],["One day at a time","p. 85"],["Forgiveness","pp. 66–67"],["Humility","p. 76"],["Hope","There Is a Solution, pp. 17–29"],["Patience","p. 83"],["Fun in sobriety","p. 132"],["Living sober","AA's book Living Sober"],
  ["Surrender","pp. 58–63"],["Willingness","Appendix II"],["Loneliness","pp. 151–152"],["Relationships","pp. 68–70"],["The first drink","p. 24"],["Slips and relapse",""],["Letting go",""],["Change",""],["Self-care",""],["Sponsorship",""],["Work","To Employers, pp. 136–150"],["Anger","pp. 64–67"]];
 const WCOL=["#E9B949","#5BB8C9","#EE8A6B","#7FC48A","#A99BE0","#F2A9C4","#6FA3E8","#F4C98F"];
-let wSel=LS.get("bbb-wtopics",null),wOwn=LS.get("bbb-wown",[]),wUsed=[],wAngle=0,wSpinning=false;
-if(!Array.isArray(wSel))wSel=WTOP.slice(0,16).map(t=>t[0]);
+let wSel=LS.get("bbb-wtopics",null),wOwn=LS.get("bbb-wown",[]),wUsed=[],wHist=[],wAngle=0,wSpinning=false;
+if(!Array.isArray(wSel))wSel=WTOP.slice(0,17).map(t=>t[0]);
+// Living sober became a standard topic: add it once for anyone with saved choices
+wOwn=wOwn.filter(x=>x.toLowerCase()!=="living sober");
+if(!LS.get("bbb-wlivsober",false)){if(!wSel.includes("Living sober")&&wSel.length<20)wSel.push("Living sober");LS.set("bbb-wlivsober",true);LS.set("bbb-wtopics",wSel);LS.set("bbb-wown",wOwn)}
 const wAll=()=>WTOP.concat(wOwn.map(t=>[t,""]));
 const wActive=()=>wAll().filter(t=>wSel.includes(t[0]));
 function drawWheel(){
@@ -1456,15 +1461,15 @@ function spin(){
   let delta=((target-cur)%(2*Math.PI)+2*Math.PI)%(2*Math.PI);const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
   delta+=2*Math.PI*(reduce?1:5);const start=wAngle,dur=reduce?700:4200,t0=performance.now();wSpinning=true;$("spinBtn").disabled=true;
   const step=now=>{const p=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-p,4);wAngle=start+delta*e;drawWheel();
-    if(p<1)requestAnimationFrame(step);else{wSpinning=false;$("spinBtn").disabled=false;wUsed.push(T[k][0]);showTopic(T[k])}};
+    if(p<1)requestAnimationFrame(step);else{wSpinning=false;$("spinBtn").disabled=false;wUsed.push(T[k][0]);wHist.push(T[k][0]);renderTopicHist();showTopic(T[k])}};
   requestAnimationFrame(step);
 }
 function showTopic(t){
   const left=wActive().filter(x=>!wUsed.includes(x[0])).length;
   $("wheelOut").innerHTML=`<span class="eyebrow">Today's topic</span><h2 class="wtopic">${esc(t[0])}</h2>
    <p class="sum">Share about ${esc(t[0].charAt(0).toLowerCase()+t[0].slice(1))}: what it was like, what happened, and what it's like now.</p>
-   ${t[1]?`<p class="note">To read around it first, try the Big Book, ${esc(t[1])}.</p>`:""}
-   <p class="note">${left?left+" topic"+(left===1?"":"s")+" left before any repeat.":"Every topic has had a turn. The next spin starts afresh."}</p>`;
+   ${t[1]?`<p class="note">To read around it first, try ${t[1].startsWith("AA's")?"":"the Big Book, "}${esc(t[1])}.</p>`:""}
+   <p class="note">${left?left+" topic"+(left===1?"":"s")+" left before any repeat.":"Every topic has had a turn. The next spin starts afresh."} <a href="#topicPanel" data-open-topics>Change or add topics</a></p>`;
   $("wheelOut").classList.remove("anim");void $("wheelOut").offsetWidth;$("wheelOut").classList.add("anim");
 }
 function renderTopics(){
@@ -1480,7 +1485,10 @@ $("topicForm").addEventListener("submit",e=>{e.preventDefault();const v=$("topic
   if(!wAll().some(t=>t[0].toLowerCase()===v.toLowerCase())){wOwn.push(v);LS.set("bbb-wown",wOwn)}
   const name=wAll().find(t=>t[0].toLowerCase()===v.toLowerCase())[0];if(!wSel.includes(name)&&wSel.length<20)wSel.push(name);
   LS.set("bbb-wtopics",wSel);$("topicNew").value="";renderTopics()});
-$("topicReset").onclick=()=>{wSel=WTOP.slice(0,16).map(t=>t[0]);wUsed=[];LS.set("bbb-wtopics",wSel);renderTopics()};
+function renderTopicHist(){$("topicHist").innerHTML=wHist.length?wHist.map((t,i)=>`<li><span class="pg">${i+1}</span><span>${esc(t)}</span></li>`).join(""):'<li class="note">No topics yet. Spin the wheel to start.</li>';$("clearTopics").hidden=!wHist.length}
+$("clearTopics").onclick=()=>{wHist=[];wUsed=[];renderTopicHist();$("wheelOut").innerHTML='<p class="note">Tap Spin the wheel to choose a topic, or <a href="#topicPanel" data-open-topics>change and add topics</a> first.</p>'};
+renderTopicHist();
+$("topicReset").onclick=()=>{wSel=WTOP.slice(0,17).map(t=>t[0]);wUsed=[];LS.set("bbb-wtopics",wSel);renderTopics()};
 $("spinBtn").onclick=spin;
 addEventListener("resize",()=>{if(!$("v-meet").hidden)drawWheel()});
 $("tab-meet").addEventListener("click",()=>setTimeout(drawWheel,0));
@@ -1490,7 +1498,7 @@ $("tHear").onclick=()=>{unlockAudio();playSound(tPrefs.sound)};
 document.querySelectorAll("[data-to-timer]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();$("tab-timer").click();try{$("v-timer").scrollIntoView({block:"start"})}catch(x){}}));
 $("tWarn").checked=!!tPrefs.warn;$("tWarn").onchange=e=>{tPrefs.warn=e.target.checked;LS.set("bbb-timer",tPrefs)};
 ["meetTimer","bingoTimer","spinTimer"].forEach(id=>makeTimer($(id),{share:true,doneMsg:"Time's up. Please gently bring your share to a close."}));
-$("openTopics").addEventListener("click",e=>{e.preventDefault();$("topicPanel").open=true;try{$("topicPanel").scrollIntoView({block:"start",behavior:"smooth"})}catch(x){}});
+document.addEventListener("click",e=>{if(!e.target.closest("[data-open-topics]"))return;e.preventDefault();$("topicPanel").open=true;try{$("topicPanel").scrollIntoView({block:"start",behavior:"smooth"})}catch(x){}});
 renderTopics();
 
 </script>

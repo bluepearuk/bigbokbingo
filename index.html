@@ -217,6 +217,34 @@ summary:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-ra
 .inside-list button{flex:none;width:96px;text-align:left;font:700 15px var(--body);color:var(--gold);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .inside-list span{flex:1;min-width:0;font-size:15px;max-width:60ch}
 @media (max-width:420px){.inside-list li{flex-direction:column;gap:2px}.inside-list button{width:auto}}
+.tline{list-style:none;margin:0;padding:0 0 0 4px;display:flex;flex-direction:column;border-left:2px solid var(--gold)}
+.tline li{display:flex;flex-direction:column;gap:2px;padding:0 0 16px 16px;position:relative}
+.tline li::before{content:"";position:absolute;left:-7px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--gold)}
+.tdate{font-family:var(--mono);font-size:13px;color:var(--gold);font-weight:500}
+.tline b{font-size:16px}
+.tline p{margin:2px 0 0;max-width:62ch}
+.hstory{display:flex;flex-direction:column;gap:12px}
+.hstory p{margin:0;font-size:16px;line-height:1.65;max-width:65ch}
+.hpeople{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.hp{border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.hp b{font-family:var(--display);font-size:17px}
+.hrole{font-size:12px;color:var(--gold);font-weight:600;letter-spacing:.03em}
+.hp p{margin:4px 0 0;font-size:14px}
+#toMenu{align-self:flex-start;font-size:15px;padding:8px 14px}
+.lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.feat-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.ltile{position:relative;display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;min-width:0}
+.ltile:hover{border-color:var(--gold)}
+.ltile.feat{border:2px solid var(--gold);background:var(--gold-soft);padding:14px}
+.ltile.done{border-color:var(--done);background:var(--done-soft)}
+.lt-n{font-family:var(--mono);font-size:12px;color:var(--gold)}
+.lt-t{font-weight:700;font-size:15px;line-height:1.3;overflow-wrap:anywhere}
+.feat .lt-t{font-family:var(--display);font-size:19px}
+.lt-d{font-size:13px;color:var(--muted);line-height:1.4}
+.lt-p{font-size:12px;color:var(--muted)}
+.lt-done{color:var(--done);font-weight:700}
+.ltile .lt-done{position:absolute;top:8px;right:10px}
+.feat .lt-t .lt-done{position:static}
 .topic-pick{display:flex;gap:8px;align-items:flex-end}
 .topic-pick .btn{font-size:22px;line-height:1;padding:8px 14px}
 .lsec{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:6px 0 0}
@@ -322,7 +350,7 @@ img{max-width:100%}
 <body>
 <div class="wrap" id="top">
   <div class="banner" id="newsBanner" hidden role="region" aria-label="What's new">
-    <p><b>New:</b> the Big Book dictionary. Got a word, topic or idea to add? <a href="#feedback" id="bannerLink">Tell us</a></p>
+    <p><b>New:</b> the Big Book dictionary. Make sure to check out our <a href="#" id="bannerLearn">Learn section</a> too, with the story of AA and Steel on Steel. Got a word, topic or idea to add? <a href="#feedback" id="bannerLink">Tell us</a></p>
     <button type="button" id="bannerClose" aria-label="Close this message">&#10005;</button>
   </div>
   <header>
@@ -430,13 +458,17 @@ img{max-width:100%}
   <section id="v-learn" hidden style="display:flex;flex-direction:column;gap:14px">
     <div><span class="eyebrow">Big Book learning</span><h3 style="font-size:22px">Learning topics</h3>
       <p class="note">Facts from the Big Book and the AA books listed in its front pages. Read the topic, check the pages in your own books, then run the quiz with the group.</p></div>
-    <div class="topic-pick">
-      <button class="btn ghost" id="tPrev" aria-label="Previous topic">‹</button>
-      <label class="f" style="flex:1 1 auto">Topic<select id="tSel"></select></label>
-      <button class="btn ghost" id="tNext" aria-label="Next topic">›</button>
-    </div>
     <p class="note" id="tProg"></p>
-    <article class="reading" id="learnOut"></article>
+    <div id="learnMenu"></div>
+    <div id="learnTopic" hidden style="display:flex;flex-direction:column;gap:14px">
+      <button class="btn ghost" id="toMenu" type="button">‹ All topics</button>
+      <div class="topic-pick">
+        <button class="btn ghost" id="tPrev" aria-label="Previous topic">‹</button>
+        <label class="f" style="flex:1 1 auto">Topic<select id="tSel"></select></label>
+        <button class="btn ghost" id="tNext" aria-label="Next topic">›</button>
+      </div>
+      <article class="reading" id="learnOut"></article>
+    </div>
   </section>
 
   <section id="v-meet" hidden style="display:flex;flex-direction:column;gap:16px">
@@ -928,10 +960,32 @@ const SOSG={
 };
 let sosMode="steps";
 const SOSL=["Understanding","Doing","Sharpening"];
+// The story of AA: timeline, story, people and editions
+const HIST={tl:[["1902", "William James's book", "The American psychologist William James publishes The Varieties of Religious Experience. Bill W. reads it years later, and the Big Book borrows his idea of the \"educational variety\" of spiritual experience."], ["Early 1930s", "Rowland Hazard sees Carl Jung", "An American businessman, Rowland Hazard, is treated for his drinking by the Swiss psychiatrist Carl Jung. When he relapses, Jung tells him only a vital spiritual experience can save him. Hazard finds one through the Oxford Group."], ["1934", "Ebby Thacher is helped", "Rowland Hazard and friends from the Oxford Group help Ebby Thacher, an old drinking friend of Bill W., to get sober."], ["November 1934", "Ebby visits Bill", "Ebby calls on Bill in New York, sober and changed. Bill, still drinking, is curious about what has happened to him."], ["December 1934", "Bill's last drink", "Bill enters Towns Hospital in New York for the last time, under Dr Silkworth. He has a powerful spiritual experience there and never drinks again."], ["May 1935", "Bill meets Dr Bob", "On a business trip to Akron, Ohio, Bill is tempted by the hotel bar. Instead he phones round to find another alcoholic to talk to. Henrietta Seiberling introduces him to Dr Bob Smith on 12 May 1935."], ["10 June 1935", "AA's founding date", "Dr Bob has his last drink. This day is taken as the start of Alcoholics Anonymous."], ["June 1935", "AA number three", "Bill and Dr Bob visit Bill D., an Akron lawyer in hospital. He gets sober and becomes AA member number three: the man on the bed."], ["1935 to 1937", "Slow growth", "Small groups grow in Akron and New York, still meeting within the Oxford Group. In 1937 the New York members go their own way."], ["1938", "The book is written", "By late 1937 around 40 people are staying sober, and members decide to write a book. Bill writes most of it, Dr Bob and others review the drafts, and the Twelve Steps are written in December 1938."], ["April 1939", "The Big Book is published", "Alcoholics Anonymous is published. There are about 100 members, and the fellowship takes its name from the book."], ["1939", "Akron, Cleveland and the hospital", "Akron members leave the Oxford Group, a fast-growing group starts in Cleveland, and Sister Ignatia begins working with Dr Bob to admit alcoholics to St Thomas Hospital in Akron."], ["March 1941", "The magazine article", "Jack Alexander's article in the Saturday Evening Post brings a flood of people looking for help. Membership grows from about 2,000 to around 8,000 by the end of the year."], ["1941", "Spiritual awakening", "A new printing of the Big Book changes Step Twelve's \"spiritual experience\" to \"spiritual awakening\" and adds Appendix II, explaining that most members change gradually."], ["June 1944", "The Grapevine", "The AA Grapevine, the fellowship's magazine, is founded."], ["1946", "The Traditions take shape", "Bill first sets out the ideas behind the Twelve Traditions in the Grapevine, drawing on the groups' hard-won experience of what holds them together."], ["March 1947", "AA reaches Britain", "The first AA meeting in Britain is held at the Dorchester Hotel in London, organised by a visiting American, Grace Oursler. Eight alcoholics attend."], ["1950", "The Traditions are adopted", "AA's First International Convention in Cleveland adopts the Twelve Traditions."], ["16 November 1950", "Dr Bob dies", "Dr Bob dies, after over 15 years of sobriety spent helping thousands of alcoholics."], ["1951", "Service and Al-Anon", "The first General Service Conference meets, and Lois Wilson helps start Al-Anon for the families and friends of alcoholics."], ["1953", "The Twelve and Twelve", "Twelve Steps and Twelve Traditions is published, with an essay on each Step and Tradition."], ["1955", "The Three Legacies handed over", "At the St. Louis convention, Bill hands Recovery, Unity and Service over to the members. The second edition of the Big Book is published."], ["1957", "AA in Britain gets its structure", "The General Service Board for AA in Great Britain holds its first meeting."], ["1961", "Bill writes to Jung", "Bill writes to thank Carl Jung, and Jung replies, months before his death."], ["1962", "The Twelve Concepts", "The Twelve Concepts for World Service are adopted, setting out how AA's service structure works."], ["24 January 1971", "Bill W. dies", "Bill W. dies, 36 years after his last drink."], ["1976", "Third edition", "The third edition of the Big Book is published, with the first 164 pages unchanged and new personal stories."], ["2001", "Fourth edition", "The fourth edition is published, with the main text still unchanged, revised stories, and the Twelve Concepts added."]],people:[["William James", "1842 to 1910", "An American psychologist and philosopher. His book The Varieties of Religious Experience helped Bill W. understand his own spiritual experience. The Big Book's Appendix II uses his phrase \"educational variety\"."], ["Carl Jung", "1875 to 1961", "A famous Swiss psychiatrist. He told Rowland Hazard that only a vital spiritual experience could save him. He appears, unnamed, in There Is a Solution (pp. 26 to 28). Bill wrote to thank him in 1961."], ["Rowland Hazard", "American businessman", "The man Jung treated. He found sobriety through the Oxford Group and in 1934 helped Ebby Thacher. He is the unnamed businessman in There Is a Solution."], ["Ebby Thacher", "Bill's old friend", "Bill's drinking friend from schooldays, who visited him sober in November 1934 and carried the message to him. Ebby appears, unnamed, in Bill's Story. He found it hard to stay sober in later years, but Bill always called him his sponsor."], ["Dr William Silkworth", "Towns Hospital, New York", "The doctor who treated Bill several times and wrote The Doctor's Opinion. He described alcoholism as an illness of body and mind, and advised Bill to talk to drunks about the illness before talking about God."], ["Bill W. (Bill Wilson)", "Co-founder, 1895 to 1971", "A New York stockbroker whose drinking ruined his career. Sober from December 1934, he co-founded AA, wrote most of the Big Book and later the Twelve Traditions and Twelve Concepts. His story opens the Big Book."], ["Lois Wilson", "Bill's wife", "She stood by Bill through his drinking, opened their home to early members, and in 1951 helped start Al-Anon for families and friends of alcoholics."], ["Sam Shoemaker", "Oxford Group, New York", "Rector of Calvary Church in New York and a leader in the Oxford Group. Bill credited him with teaching many of the ideas behind the Steps."], ["Henrietta Seiberling", "Oxford Group, Akron", "An Oxford Group member in Akron who brought Bill and Dr Bob together at her home on 12 May 1935."], ["Dr Bob (Robert Smith)", "Co-founder, died 1950", "An Akron surgeon whose last drink, on 10 June 1935, marks AA's founding date. With Sister Ignatia he helped thousands of alcoholics in hospital. His story, Doctor Bob's Nightmare, is in the Big Book."], ["Anne Smith", "Dr Bob's wife", "She welcomed Bill and many early members into the Smiths' Akron home, and is remembered for her care of newcomers and their families."], ["Bill D.", "AA number three", "An Akron lawyer who got sober in June 1935 after Bill and Dr Bob visited him in hospital: the man on the bed in A Vision for You."], ["Sister Ignatia", "The Angel of AA", "A nun at St Thomas Hospital in Akron who, from 1939, worked with Dr Bob to admit and care for alcoholics. She helped thousands over the years."], ["Clarence Snyder", "Cleveland", "An early member who started the Cleveland group in 1939, which grew quickly and showed that AA could spread beyond its founders."], ["Hank Parkhurst", "Early New York member", "Helped Bill raise money for the book and get it published, and wrote the chapter To Employers."], ["Ruth Hock", "The typist", "The secretary who typed the drafts of the Big Book in an office in Newark, New Jersey."], ["Marty Mann", "Early woman member", "One of the first women to get sober in AA. Her story is in the Big Book, and she went on to campaign for alcoholism to be treated as an illness."], ["Jack Alexander", "Journalist", "Wrote the March 1941 Saturday Evening Post article that brought thousands of people to AA."], ["Grace Oursler", "Writer", "A visiting American who organised the first AA meeting in Britain, at the Dorchester Hotel in London in March 1947."]],eds:[["First edition", "April 1939", "Written when about 100 members had recovered. Its foreword explains that the book is meant to show other alcoholics exactly how its members recovered, that members stay anonymous, that there are no fees or dues, and that AA is not tied to any religion or organisation."], ["Second edition", "1955", "Its foreword tells the story of how AA began, without naming Bill or Dr Bob, and charts its growth: about 100 members in 1939, around 8,000 by the end of 1941, and by 1955 over 150,000 members in nearly 6,000 groups in about 50 countries. It added the Twelve Traditions and many new stories, and kept the first 164 pages."], ["Third edition", "1976", "Its foreword reports more than a million members in almost 28,000 groups in over 90 countries. The main text was left unchanged, and some new personal stories were added to reflect the membership."], ["Fourth edition", "2001", "Its foreword reports around two million members in about 100,800 groups in roughly 150 countries, and mentions members taking part in meetings online. It added the Twelve Concepts and revised the personal stories, while The Doctor's Opinion and the main text stayed as they were."], ["The Preface", "Fourth edition", "Explains what changed between editions and why the first 164 pages, describing the programme of recovery, have stayed largely the same: members strongly wanted them kept. It also shows that the earlier editions had sold more than 20 million copies between them."]],story:["AA's story really begins with a chain of people. In the early 1930s an American businessman, Rowland Hazard, was treated for his drinking by the Swiss psychiatrist Carl Jung. When he drank again, Jung told him that only a vital spiritual experience could save him. Hazard found that experience through the Oxford Group, a Christian movement, and in 1934 he and his friends helped an alcoholic called Ebby Thacher.", "Ebby had been a drinking friend of Bill Wilson, a New York stockbroker whose career and health had been wrecked by alcohol. In November 1934 Ebby visited Bill, sober and calm. Bill was struck by the change. A few weeks later, in December 1934, Bill entered Towns Hospital for the last time under Dr William Silkworth. There he had a powerful spiritual experience, read William James's book on religious experience, and never drank again.", "Bill threw himself into helping other drunks, but none stayed sober. Dr Silkworth advised him to talk to them about the illness first, rather than preaching. Then, in May 1935, on a failed business trip to Akron, Ohio, Bill found himself staring at the hotel bar. Instead of drinking, he looked for another alcoholic to talk to. Henrietta Seiberling introduced him to Dr Bob Smith, a local surgeon. They talked for hours. Dr Bob had his last drink on 10 June 1935, the date taken as AA's beginning.", "Within weeks they visited an Akron lawyer, Bill D., in hospital. He got sober and became member number three. Small groups grew slowly in Akron and New York over the next two years, first inside the Oxford Group and then on their own. By 1937 around 40 people were staying sober, and members decided to write a book so the message could reach people they would never meet.", "Bill wrote most of the book in 1938, with Dr Bob and others reviewing every chapter, and the Twelve Steps were written that December. Alcoholics Anonymous was published in April 1939, when there were about 100 members, and the fellowship took its name from the book. The same year a group grew quickly in Cleveland, and Sister Ignatia began working with Dr Bob at St Thomas Hospital in Akron.", "In March 1941 Jack Alexander's article in the Saturday Evening Post brought a flood of people looking for help, and membership grew from about 2,000 to around 8,000 by the end of the year. Growing so fast brought problems over money, leadership and who could belong. The answers, worked out the hard way, became the Twelve Traditions, which Bill first set out in 1946 and which were adopted in 1950.", "AA came to Britain in March 1947, with a first meeting at the Dorchester Hotel in London. Dr Bob died in November 1950. In 1951 the first General Service Conference met, and Lois Wilson helped start Al-Anon. In 1955, at the St. Louis convention, Bill handed the fellowship's Three Legacies of Recovery, Unity and Service over to the members, and the second edition of the Big Book was published.", "Bill wrote to Carl Jung in 1961 to thank him for the advice that had started it all. The Twelve Concepts for World Service followed in 1962, and Bill died in January 1971. The Big Book's third edition came in 1976 and its fourth in 2001. The stories changed with each edition, but the first 164 pages, describing how the first members recovered, have stayed essentially as they were written in 1939."],qs:["Which link in the chain, from Jung to Dr Bob, means most to you?", "Bill found that talking to another alcoholic kept him sober. When has that been true for you?", "Why do you think members wanted the first 164 pages kept the same?"],quiz:[["Who did Carl Jung treat for his drinking?", ["Bill W.", "Rowland Hazard", "Ebby Thacher", "Dr Bob"], 1, ""], ["Who visited Bill in November 1934 and carried the message to him?", ["Dr Silkworth", "Ebby Thacher", "Sam Shoemaker", "Hank Parkhurst"], 1, ""], ["What date is taken as AA's founding?", ["11 December 1934", "12 May 1935", "10 June 1935", "April 1939"], 2, "Dr Bob's last drink."], ["About how many members were there when the Big Book was published in 1939?", ["12", "About 100", "About 2,000", "About 8,000"], 1, ""], ["Where was the first AA meeting in Britain held in 1947?", ["Westminster Abbey", "The Dorchester Hotel, London", "A church hall in Manchester", "Towns Hospital"], 1, ""], ["Which part of the Big Book has stayed essentially the same since 1939?", ["The personal stories", "The forewords", "The first 164 pages", "The appendices"], 2, ""]]};
+let histView="timeline";
+LEARN.push({t:"The story of AA",hist:true,parts:[]});
 LEARN.push({t:"Steel on Steel",sos:true,parts:[]});
 let sosStep=0,sosPick=null;
 let lT=LS.get("bbb-ltopic",0),lP=0,studied=LS.get("bbb-studied",[]);
 const AB="ABCD";
+function renderAAStory(T0,done){
+  const V=[["timeline","Timeline"],["story","Read as a story"],["people","Who's who"],["eds","The editions"]];
+  let body="";
+  if(histView==="timeline")body=`<ol class="tline">${HIST.tl.map(e=>`<li><span class="tdate">${esc(e[0])}</span><div><b>${esc(e[1])}</b><p>${esc(e[2])}</p></div></li>`).join("")}</ol>`;
+  else if(histView==="story")body=`<div class="hstory">${HIST.story.map(p=>`<p>${esc(p)}</p>`).join("")}</div>`;
+  else if(histView==="people")body=`<div class="hpeople">${HIST.people.map(p=>`<div class="hp"><b>${esc(p[0])}</b><span class="hrole">${esc(p[1])}</span><p>${esc(p[2])}</p></div>`).join("")}</div>`;
+  else body=`<div class="hpeople">${HIST.eds.map(p=>`<div class="hp"><b>${esc(p[0])}</b><span class="hrole">${esc(p[1])}</span><p>${esc(p[2])}</p></div>`).join("")}</div><p class="note">The forewords and preface are summarised here in plain words. Read them in full at the front of your own Big Book.</p>`;
+  $("learnOut").innerHTML=`<div class="ref"><span class="pg">1902 to 2001</span><span class="ch">How AA began and grew</span></div>
+   <h2>${esc(T0.t)}</h2>
+   <p class="sum">How a chain of people led to Alcoholics Anonymous, the order it all happened in, and how the Big Book has changed across its four editions.</p>
+   <div class="seg parts" role="group" aria-label="View">${V.map(v=>`<button data-hv="${v[0]}" aria-pressed="${v[0]===histView}">${v[1]}</button>`).join("")}</div>
+   ${body}
+   <p class="lsec">Where to read</p><ul class="reads"><li>Big Book: The Doctor's Opinion, Bill's Story, There Is a Solution, A Vision for You, Doctor Bob's Nightmare, the forewords and the preface</li><li>Alcoholics Anonymous Comes of Age</li><li>Pass It On and Dr. Bob and the Good Oldtimers</li></ul>
+   <p class="qs-h">For discussion</p><ol class="qs">${HIST.qs.map(q=>`<li>${esc(q)}</li>`).join("")}</ol>
+   <div class="quiz"><p class="qs-h">Quiz for the group</p>${HIST.quiz.map((q,i)=>`<div class="qz" id="qz${i}"><p>${i+1}. ${esc(q[0])}</p><ul class="opts">${q[1].map((o,j)=>`<li${j===q[2]?' class="ok"':""}><b>${AB[j]}</b>${esc(o)}</li>`).join("")}</ul><p class="ans" hidden>Answer: ${AB[q[2]]}, ${esc(q[1][q[2]])}.${q[3]?" "+esc(q[3]):""}</p><button class="btn ghost" data-rev="${i}">Show answer</button></div>`).join("")}</div>
+   <p class="note">Dates and details are checked against AA's own published history. Sources sometimes differ by a day or so on early dates.</p>
+   <div class="actions"><button class="btn ${done?"shared":"gold"}" id="studyBtn">${done?"Studied ✓":"Mark topic as studied"}</button></div>`;
+}
 function renderSOS(T0){
   const st=SOS[sosStep];
   const pick=sosPick?`<div class="sos-pick"><span class="eyebrow">For the meeting</span><p><b>Step ${sosPick[0]+1}, ${esc(SOSL[sosPick[1]])}:</b> ${esc(SOS[sosPick[0]][sosPick[1]+1])}</p></div>`:"";
@@ -966,6 +1020,7 @@ function renderLearn(){
   const nStudy=LEARN.filter(x=>!x.sos).length;
   $("tProg").textContent=`${studied.filter(i=>LEARN[i]&&!LEARN[i].sos).length} of ${nStudy} topics studied`;
   if(T0.sos){renderSOS(T0);return}
+  if(T0.hist){renderAAStory(T0,studied.includes(lT));return}
   const done=studied.includes(lT);
   $("learnOut").innerHTML=`<div class="ref"><span class="pg">Topic ${lT+1} of ${LEARN.length}</span>${T0.parts.length>1?`<span class="ch">Part ${lP+1} of ${T0.parts.length}</span>`:""}</div>
    <h2>${esc(T0.t)}${P.h?`: ${esc(P.h)}`:""}</h2>
@@ -978,17 +1033,38 @@ function renderLearn(){
    <div class="actions"><button class="btn ${done?"shared":"gold"}" id="studyBtn">${done?"Studied ✓":"Mark topic as studied"}</button></div>`;
 }
 $("learnOut").addEventListener("click",e=>{
+  const hv=e.target.closest("[data-hv]");if(hv){histView=hv.dataset.hv;renderLearn();return}
   const mb=e.target.closest("[data-sosm]");if(mb){sosMode=mb.dataset.sosm;renderLearn();return}
   const sb=e.target.closest("[data-sos]");if(sb){sosStep=+sb.dataset.sos;renderLearn();return}
   if(e.target.closest("#sosRand")){let a;do{a=Math.floor(Math.random()*12)}while(a===sosStep);sosPick=null;sosStep=a;renderLearn();return}
   const pb=e.target.closest("[data-part]");if(pb){lP=+pb.dataset.part;renderLearn();return}
   const rb=e.target.closest("[data-rev]");if(rb){const z=$("qz"+rb.dataset.rev),on=!z.classList.contains("rev");z.classList.toggle("rev",on);z.querySelector(".ans").hidden=!on;rb.textContent=on?"Hide answer":"Show answer";return}
-  if(e.target.closest("#studyBtn")){studied=studied.includes(lT)?studied.filter(n=>n!==lT):studied.concat(lT);LS.set("bbb-studied",studied);renderLearn()}
+  if(e.target.closest("#studyBtn")){studied=studied.includes(lT)?studied.filter(n=>n!==lT):studied.concat(lT);LS.set("bbb-studied",studied);renderLearn();renderLearnMenu()}
 });
+// Learn menu: tiles instead of a dropdown
+let learnMenu=true;
+const FEAT=[["hist","The whole history in order, as a timeline or a story, with who's who and the Big Book's editions."],
+  ["sos","Three questions for each Step, to use with your sponsor or in a step meeting, plus a group check-in."],
+  ["med","What AA's own literature says about medication, and keeping each other safe."]];
+function featIndex(k){return LEARN.findIndex(x=>k==="hist"?x.hist:k==="sos"?x.sos:x.t==="AA and medication")}
+function renderLearnMenu(){
+  const nStudy=LEARN.filter(x=>!x.sos).length;
+  $("tProg").textContent=`${studied.filter(i=>LEARN[i]&&!LEARN[i].sos).length} of ${nStudy} topics studied`;
+  const feat=FEAT.map(([k,d])=>{const i=featIndex(k);if(i<0)return"";const x=LEARN[i];
+    return `<button class="ltile feat" data-lt="${i}"><span class="lt-t">${esc(x.t)}${studied.includes(i)?' <span class="lt-done">✓</span>':""}</span><span class="lt-d">${esc(d)}</span></button>`}).join("");
+  const core=LEARN.map((x,i)=>({x,i})).filter(o=>!o.x.sos&&!o.x.hist&&o.x.t!=="AA and medication");
+  $("learnMenu").innerHTML=`<p class="lsec">Featured</p><div class="lgrid feat-grid">${feat}</div>
+    <p class="lsec">Big Book study: ${core.length} topics</p>
+    <div class="lgrid">${core.map((o,n)=>`<button class="ltile${studied.includes(o.i)?" done":""}" data-lt="${o.i}"><span class="lt-n">${n+1}</span><span class="lt-t">${esc(o.x.t)}</span>${o.x.parts.length>1?`<span class="lt-p">${o.x.parts.length} parts</span>`:""}${studied.includes(o.i)?'<span class="lt-done" aria-label="studied">✓</span>':""}</button>`).join("")}</div>`;
+}
+function showLearn(menu){learnMenu=menu;$("learnMenu").hidden=!menu;$("learnTopic").hidden=menu;if(menu)renderLearnMenu();else renderLearn()}
+$("learnMenu").addEventListener("click",e=>{const b=e.target.closest("[data-lt]");if(!b)return;lT=+b.dataset.lt;lP=0;LS.set("bbb-ltopic",lT);showLearn(false);
+  try{$("v-learn").scrollIntoView({block:"start"})}catch(x){}});
+$("toMenu").onclick=()=>{showLearn(true);try{$("v-learn").scrollIntoView({block:"start"})}catch(x){}};
 function goTopic(n){lT=(n+LEARN.length)%LEARN.length;lP=0;LS.set("bbb-ltopic",lT);renderLearn();$("learnOut").scrollIntoView({block:"nearest"})}
 $("tSel").onchange=e=>goTopic(+e.target.value);
 $("tPrev").onclick=()=>goTopic(lT-1);$("tNext").onclick=()=>goTopic(lT+1);
-renderLearn();
+renderLearn();showLearn(true);
 
 
 $("drawBack").addEventListener("click",goHome);
@@ -1037,11 +1113,13 @@ $("shareCopy").onclick=()=>{track("share-copy","Share: copy");const t=SHARE_TEXT
   try{navigator.clipboard.writeText(t).then(ok).catch(()=>fallback(t,ok))}catch(e){fallback(t,ok)}};
 
 // What's new banner
-const BANNER_ID="dictionary-2026-10";
+const BANNER_ID="learn-2026-10";
 try{if(LS.get("bbb-banner","")!==BANNER_ID)$("newsBanner").hidden=false}catch(e){}
 $("bannerClose").onclick=()=>{$("newsBanner").hidden=true;LS.set("bbb-banner",BANNER_ID)};
 $("bannerLink").addEventListener("click",()=>track("banner-feedback","Banner: tell us"));
+$("bannerLearn").addEventListener("click",e=>{e.preventDefault();track("banner-learn","Banner: Learn");$("tab-learn").click();try{$("v-learn").scrollIntoView({block:"start",behavior:"smooth"})}catch(x){}});
 
+$("tab-learn").addEventListener("click",()=>showLearn(true));
 // "What's inside": tap a name to open that tab
 document.querySelector(".inside-list").addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b)return;$("tab-"+b.dataset.go).click();
   try{window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})}catch(x){window.scrollTo(0,0)}});
